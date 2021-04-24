@@ -11,12 +11,23 @@ import time
 print "hello"
 print "python " + str(sys.version) + " " + str(sys.version_info)
 try:
-	midi_connection = MidiConnector('/dev/snd/midiC1D0')
+	midi_connection = MidiConnector('/dev/snd/midiC4D0')
 except SerialException as e:
 	print e
 	exit()
 
-arduino = serial.Serial('/dev/ttyUSB1', 57600, timeout=.1)
+
+for i in range(0, 4):
+	try:
+		arduino = serial.Serial('/dev/ttyUSB' + str(i), 57600, timeout=.1)
+		break
+	except SerialException as e:
+		print e
+
+if not arduino:
+	exit()
+
+
 i=0
 deadband=30
 def _map(x, in_min, in_max, out_min, out_max):
