@@ -6,7 +6,7 @@ from midi import MidiConnector
 from midi import ControlChange, Message
 
 read = True
-midi_connection = MidiConnector('/dev/serial0')
+midi_connection = MidiConnector('/dev/midi3')
 
 if not read:
 	control_change = ControlChange(100, 127)
