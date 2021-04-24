@@ -1,20 +1,14 @@
 #!/usr/bin/python
 import sys
 import serial
-import midi
-from midi import MidiConnector
-from midi import ControlChange, Message
 from serial.serialutil import SerialException
 import time
+import rtmidi_python as rtmidi
 
 
-print "hello"
-print "python " + str(sys.version) + " " + str(sys.version_info)
-try:
-	midi_connection = MidiConnector('/dev/snd/midiC4D0')
-except SerialException as e:
-	print e
-	exit()
+midi_out = rtmidi.MidiOut()
+midi_out.open_port(1)
+
 
 
 for i in range(0, 4):
@@ -23,9 +17,6 @@ for i in range(0, 4):
 		break
 	except SerialException as e:
 		print e
-
-if not arduino:
-	exit()
 
 
 i=0
@@ -42,6 +33,4 @@ while True:
 	        right = message.split("b")[0]
 		print "left: " + str(left) + "\tright: " + str(right)
 		if left > deadband:
-			control_change = ControlChange(7, _map(left, 0, 1024, 0, 127))
-			msg = Message(control_change, channel=1)
-			midi_connection.write(msg)
+			midi_out.send_message([0xB0, 7, _map(left, 0, 1024, 0, 127)]) # volume
