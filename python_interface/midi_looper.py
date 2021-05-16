@@ -3,11 +3,11 @@ import sys
 import serial
 from serial.serialutil import SerialException
 import time
-import rtmidi
+# import rtmidi
+import math
 
-
-midi_out = rtmidi.MidiOut()
-midi_out.open_port(1)
+#midi_out = rtmidi.MidiOut()
+#midi_out.open_port(1)
 
 '''
 0: Sysex (13 bytes)
@@ -37,14 +37,33 @@ class PyLooper():
                 self.current_time = time.time()
                 self.bar_length_seconds = self.bps * time_sig
                 self.last_remainder = 0
-                while True:
-                        self.loop()
+                self.sample_time = self.bar_length_seconds / 10
+                self.buffer = {(self.sample_time*x):None for x in range(0, 100)}
+                #while True:
+                #        self.loop()
 
         def loop(self):
                 now = time.time()
-                while (now + self.bar_length_seconds) > time.time():
-                        self.record((now + self.bar_length_seconds) - time.time())
+                loop_end_time = now + 8.0
+                while (time.time() < loop_end_time):
+                        self.record_2(loop_end_time, now)
                 print("NEW BAH")
+
+	def record_2(self, loop_end_time, now):
+                sample_end_time = time.time() + (loop_end_time - time.time()) % self.sample_time
+		print "time:{time} sample_end_time:{sample}".format(time=(loop_end_time - time.time()), sample=(loop_end_time - sample_end_time))
+		self.buffer[math.floor(loop_end_time - time.time())] = self.get_samples(sample_end_time)
+
+	def get_samples(self, end_time):
+		while time.time() < end_time:
+			#print "new_sample"
+			things = []
+			midi_thing = self.get_midi_stuff()
+			things.append(midi_thing)
+		return things
+
+	def get_midi_stuff(self):
+		return 0
 
         def record(self, t_time):
                 current_beat = math.ceil((self.bar_length_seconds - t_time) / self.bps)
@@ -55,7 +74,7 @@ class PyLooper():
 
 
 loop = PyLooper()
-
+exit()
 arduino = serial.Serial('/COM4', 57600, timeout=.1)
 
 
