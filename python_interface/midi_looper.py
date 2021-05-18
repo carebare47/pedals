@@ -3,6 +3,7 @@ import sys
 import serial
 from serial.serialutil import SerialException
 import time
+import numpy as np
 # import rtmidi
 import math
 
@@ -25,6 +26,13 @@ import math
 bpm = 120
 bps = bpm/60
 
+class MidiData():
+	def __init__(self, name):
+		self.name = name
+		self.data = {}
+
+	
+
 class PyLooper():
         def __init__(self, bpm=120, time_sig=4):
                 self.bpm = bpm
@@ -37,33 +45,69 @@ class PyLooper():
                 self.current_time = time.time()
                 self.bar_length_seconds = self.bps * time_sig
                 self.last_remainder = 0
-                self.sample_time = self.bar_length_seconds / 10
-                self.buffer = {(self.sample_time*x):None for x in range(0, 100)}
+		self.data = MidiData("test")
+                self.beat_time_s = self.bar_length_seconds / 20
+		self.timer2 = time.time()
+                self.buffer = {(self.beat_time_s*x):None for x in range(0, 100)}
+
+
+
+		self.samples = []
                 #while True:
                 #        self.loop()
 
         def loop(self):
                 now = time.time()
                 loop_end_time = now + 8.0
+		j = 0
                 while (time.time() < loop_end_time):
-                        self.record_2(loop_end_time, now)
-                print("NEW BAH")
+			if j%4 == 0:
+				print "beat {} ".format(j),
+                        self.record_2(loop_end_time, now, j)
+			j = j + 1
+                print("NEW BAH j: {j}".format(j=j))
+		for key, value in self.buffer.iteritems():
+			print key, value
+		#for s in self.samples:
+		#	print s
 
-	def record_2(self, loop_end_time, now):
-                sample_end_time = time.time() + (loop_end_time - time.time()) % self.sample_time
-		print "time:{time} sample_end_time:{sample}".format(time=(loop_end_time - time.time()), sample=(loop_end_time - sample_end_time))
-		self.buffer[math.floor(loop_end_time - time.time())] = self.get_samples(sample_end_time)
+	def record_2(self, loop_end_time, now, sub_beat):
+                beat_end_time = time.time() + (loop_end_time - time.time()) % self.beat_time_s
+		self.samples.append("{e}".format(e=beat_end_time))
+		# print "time:{time} beat_end_time:{sample}".format(time=(loop_end_time - time.time()), sample=(loop_end_time - beat_end_time))
+		timestamp, sample = self.get_samples(beat_end_time)
+		print timestamp, sample
+		key = '{a}_{b}'.format(a=str(sub_beat), b=str(timestamp))
+		print key
+		self.buffer[key] = sample
 
 	def get_samples(self, end_time):
+		i=0
 		while time.time() < end_time:
 			#print "new_sample"
-			things = []
-			midi_thing = self.get_midi_stuff()
-			things.append(midi_thing)
-		return things
+			#things = []
+			#midi_thing = self.get_midi_stuff()
+			timestamp, sample = self.get_midi_stuff(end_time)
+			self.data.data[timestamp] = sample
+			#things.append(midi_thing)
+			i = i + 1
+			#print ".",
+		print "s: {i}".format(i=i)
+		return timestamp, sample
 
-	def get_midi_stuff(self):
-		return 0
+	def get_midi_stuff(self, end_time):
+		self.timer2 = time.time()
+		while not self.midi_ready():
+			pass
+		sample = None
+		timestamp = round(end_time - time.time(), 2)
+		return timestamp, sample
+
+	def midi_ready(self): 
+		if (self.timer2 + 0.05 < time.time()):
+			return 1
+		else:
+			return 0
 
         def record(self, t_time):
                 current_beat = math.ceil((self.bar_length_seconds - t_time) / self.bps)
