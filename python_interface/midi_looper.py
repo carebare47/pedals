@@ -4,7 +4,7 @@ import serial
 from serial.serialutil import SerialException
 import time
 import numpy as np
-# import rtmidi
+import rtmidi_python as rtmidi
 import math
 
 #midi_out = rtmidi.MidiOut()
@@ -22,6 +22,23 @@ import math
 4: Sysex (13 bytes)
     F0 41 10 00 00 72 12 00 00 00 08 78 F7 
 '''
+
+'''
+
+def callback(message, time_stamp):
+    print message, time_stamp
+
+midi_in = rtmidi.MidiIn()
+midi_in.callback = callback
+midi_in.open_port(0)
+
+# do something else here (but don't quit)
+Note that the signature of the callback differs from the original RtMidi API: message is now the first parameter, like in the tuple returned by get_message().
+
+'''
+
+
+
 
 bpm = 120
 bps = bpm/60
@@ -49,9 +66,18 @@ class PyLooper():
                 self.beat_time_s = self.bar_length_seconds / 20
 		self.timer2 = time.time()
                 self.buffer = {(self.beat_time_s*x):None for x in range(0, 100)}
+		#self.midi_in = rtmidi.MidiIn()
+		#self.midi_in.callback = self.callback
+		#self.midi_in.open_port(0)
 		self.samples = []
-                while True:
-                        self.loop()
+                #while True:
+                #        self.loop()
+
+	def callback(message, time_stamp):
+                for element in message:
+			print "callback: {} @ {}".format(element, time_stamp)
+		self.buffer[key]
+
 
         def loop(self):
                 now = time.time()
@@ -97,7 +123,7 @@ class PyLooper():
 		while not self.midi_ready():
 			pass
 		sample = None
-		timestamp = round(end_time - time.time(), 2)
+		timestamp = round(end_time - time.time(), 6)
 		return timestamp, sample
 
 	def midi_ready(self): 
@@ -115,6 +141,7 @@ class PyLooper():
 
 
 loop = PyLooper()
+'''
 exit()
 arduino = serial.Serial('/COM4', 57600, timeout=.1)
 
@@ -154,3 +181,4 @@ while True:
 		if not time.localtime(time.time())[5] % 10 and not tflag:
 			print(time.asctime(time.localtime(time.time())))
 			tflag = True
+'''
