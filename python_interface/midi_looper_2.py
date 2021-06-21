@@ -35,8 +35,9 @@ class MidiData():
 	
 
 class PyLooper():
-        def __init__(self, bpm=120, time_sig=4):
+        def __init__(self, bpm=120, time_sig=4, real_hardware=False):
                 self.bpm = bpm
+		self.real_hardware = real_hardware
                 self.bps = bpm/60.0
                 self._valid_time_sigs = [2, 3, 4]
                 if time_sig not in self._valid_time_sigs:
@@ -50,9 +51,12 @@ class PyLooper():
                 self.beat_time_s = self.bar_length_seconds / 20
 		self.timer2 = time.time()
                 self.buffer = {(self.beat_time_s*x):None for x in range(0, 100)}
-		#self.midi_in = rtmidi.MidiIn()
-		#self.midi_in.callback = self.callback
-		#self.midi_in.open_port(0)
+		if self.real_hardware:
+			self.midi_in = rtmidi.MidiIn()
+			self.midi_in.callback = self.callback
+			self.midi_in.open_port(0)
+			self.midi_out = rtmidi.MidiOut()
+			self.midi_out.open_port(0)
 		self.samples = []
 		self.beat_dict = {j:None for j in range(0, 16)}
                 #while True:
@@ -68,8 +72,9 @@ class PyLooper():
 		message = msg[0]
 		time_stamp = msg[1]
 		for sub_msg in message:		
-			print "playing {}".format(sub_msg)
-
+			print "playing {}".format(str(sub_msg))
+		if self.real_hardware:
+			self.midi_out.send_message(message) # Note on
 
         def loop(self):
                 now = time.time()
@@ -86,8 +91,6 @@ class PyLooper():
                 print("NEW BAH j: {j}".format(j=j))
 		for key in sorted(self.beat_dict):
 			print key, self.beat_dict[key]
-		#for s in self.samples:
-		#	print s
 
 	def record_2(self, loop_end_time, now, sub_beat):
                 beat_end_time = time.time() + (loop_end_time - time.time()) % self.beat_time_s
@@ -99,13 +102,6 @@ class PyLooper():
 			pass
 		return
 
-
-        def record(self, t_time):
-                current_beat = math.ceil((self.bar_length_seconds - t_time) / self.bps)
-                remainder = math.floor((self.bar_length_seconds - t_time) % self.bps)
-                if remainder != self.last_remainder:
-                        print(current_beat, remainder, self.last_remainder)
-                        self.last_remainder = remainder
 
 
 loop = PyLooper()
