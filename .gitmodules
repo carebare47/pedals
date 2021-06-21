@@ -1,0 +1,6 @@
+[submodule "python_interface/python_interface/rtmidi-python"]
+	path = python_interface/python_interface/rtmidi-python
+	url = https://github.com/superquadratic/rtmidi-python
+[submodule "rtmidi-python"]
+	path = rtmidi-python
+	url = https://github.com/superquadratic/rtmidi-python

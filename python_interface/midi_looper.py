@@ -49,12 +49,9 @@ class PyLooper():
                 self.beat_time_s = self.bar_length_seconds / 20
 		self.timer2 = time.time()
                 self.buffer = {(self.beat_time_s*x):None for x in range(0, 100)}
-
-
-
 		self.samples = []
-                #while True:
-                #        self.loop()
+                while True:
+                        self.loop()
 
         def loop(self):
                 now = time.time()
